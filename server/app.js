@@ -1,0 +1,61 @@
+import express from "express";
+import dotenv from "dotenv";
+import cors from "cors";
+import limiter from "express-rate-limit";
+import errorMiddleWare from "./middleWare/errorMiddleWare.middleware.js";
+import authRouter from "./router/auth.route.js";
+
+
+dotenv.config();
+
+
+const app = express();
+
+const isAllowed = ['http://localhost:5173'];
+
+const corsOptions = (req , cb) => {
+
+    const origin = req.headers.origin;
+
+    if(!origin){
+        return cb(null, true);
+    }
+
+    if(isAllowed.includes(origin)){
+        return cb(
+            null,
+            {
+                origin: true,
+                methods:["GET" , "POST" , "PUT" , "PATCH" , "DELETE"],
+                credentials: true,
+                allowedHeaders: ['Content-Type', 'Authorization']
+            }
+        )
+    }
+}
+
+app.use(cors(corsOptions));
+
+const rateLimiter = limiter({
+    windowMs: 15 * 60 * 1000,
+    limit:100,
+    legacyHeaders: false,
+    standardHeaders: true,
+    handler: (req, res) => {
+        res.status(429).json({
+            message: "Too many requests, please try again later."
+        })
+    }
+});
+
+app.use(rateLimiter);
+
+
+app.use('/api/v1/auth' , authRouter); 
+
+app.use(errorMiddleWare);
+
+export default app;
+
+
+
