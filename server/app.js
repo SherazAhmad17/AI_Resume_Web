@@ -50,6 +50,10 @@ const rateLimiter = limiter({
 
 app.use(rateLimiter);
 
+app.use(express.json());
+
+app.use(express.urlencoded({extended:true}));
+
 
 app.use('/api/v1/auth' , authRouter); 
 
