@@ -4,6 +4,7 @@ import cors from "cors";
 import limiter from "express-rate-limit";
 import errorMiddleWare from "./middleWare/errorMiddleWare.middleware.js";
 import authRouter from "./router/auth.route.js";
+import cookieParser from "cookie-parser";
 
 
 dotenv.config();
@@ -51,6 +52,8 @@ const rateLimiter = limiter({
 app.use(rateLimiter);
 
 app.use(express.json());
+
+app.use(cookieParser())
 
 app.use(express.urlencoded({extended:true}));
 

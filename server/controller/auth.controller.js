@@ -1,7 +1,8 @@
 import AsyncHandler from '../handler/AsyncHandler.js'
 import User from '../model/user.model.js'
 import CustomError from '../handler/CustomError.js'
-import generateAccessToken from "../utils/genrateAccessToken.js"
+import {generateAccessToken , generateRefreshToken} from "../utils/genrateAccessToken.js"
+import {CookieOptions} from '../utils/cookiesOption.js'
 
 const RegisterUser = AsyncHandler(async(req,res,next)=>{
 
@@ -51,12 +52,18 @@ const LoginUser = AsyncHandler(async(req,res,next)=>{
         return next(new CustomError(400 ,"Invalid email or password"))
     }
 
-    let token = generateAccessToken(user)
+    let accessToken = generateAccessToken(user)
+    let refreshToken = generateRefreshToken(user)
 
-    res.status(200).json({
+    user.refreshToken =[{token: refreshToken , createdAt: Date.now()}]
+
+    await user.save({validateBeforeSave: false})
+
+    res.cookie("refreshToken" , refreshToken, CookieOptions).status(200).json({
         success:true,
         message:"User logged in successfully",
-        accessToken: token,
+        accessToken: accessToken,
+        refreshToken: refreshToken,
         user
     })
 

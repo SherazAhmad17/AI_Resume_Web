@@ -12,4 +12,16 @@ function generateAccessToken(user){
 
 }
 
-export default generateAccessToken;
+function generateRefreshToken(user){
+
+    const token = jwt.sign({
+        userId: user._id,
+    },     process.env.REFRESH_TOKEN_SECRET, {
+        expiresIn: process.env.REFRESH_TOKEN_EXPIRE_TIME || '7d'
+    } )
+
+    return token;
+
+}
+
+export { generateAccessToken, generateRefreshToken };
