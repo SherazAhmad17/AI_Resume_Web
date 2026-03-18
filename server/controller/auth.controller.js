@@ -3,6 +3,7 @@ import User from '../model/user.model.js'
 import CustomError from '../handler/CustomError.js'
 import {generateAccessToken , generateRefreshToken} from "../utils/genrateAccessToken.js"
 import {CookieOptions} from '../utils/cookiesOption.js'
+import jwt from 'jsonwebtoken'
 
 const RegisterUser = AsyncHandler(async(req,res,next)=>{
 
@@ -69,4 +70,40 @@ const LoginUser = AsyncHandler(async(req,res,next)=>{
 
 })
 
-export {RegisterUser,LoginUser}
+const RefreshToken = AsyncHandler(async(req,res,next)=>{
+    
+    const incomingRefreshToken = req.cookies.refreshToken
+
+    if(!incomingRefreshToken){
+        return next(new CustomError(400 ,"Refresh token not found"))
+    }
+
+    const decoded = jwt.verify(incomingRefreshToken , process.env.REFRESH_TOKEN_SECRET)
+
+    if(!decoded.userId){
+        return next(new CustomError(400 ,"Invalid refresh token"))
+    }
+
+    const isTokenValid = await User.findOne({"refreshToken.token": incomingRefreshToken});
+
+    if(!isTokenValid){
+        return next(new CustomError(400 ,"Invalid refresh token"))
+    }
+
+    const newAccessToken = generateAccessToken(isTokenValid)
+    const newRefreshToken = generateRefreshToken(isTokenValid)
+
+    isTokenValid.refreshToken = [{token: newRefreshToken , createdAt: Date.now()}]
+
+    await isTokenValid.save({validateBeforeSave: false})
+
+    res.cookie("refreshToken" , newRefreshToken , CookieOptions).status(200).json({
+        success:true,
+        message:"Tokens refreshed successfully",
+        data:{
+            accessToken: newAccessToken,
+        }
+    })
+})
+
+export {RegisterUser,LoginUser,RefreshToken}

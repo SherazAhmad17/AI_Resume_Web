@@ -2,9 +2,10 @@ import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import limiter from "express-rate-limit";
-import errorMiddleWare from "./middleWare/errorMiddleWare.middleware.js";
+import ErrorMiddleWare from "./middleWare/errorMiddleWare.middleware.js";
 import authRouter from "./router/auth.route.js";
 import cookieParser from "cookie-parser";
+import userRouter from "./router/user.route.js";
 
 
 dotenv.config();
@@ -59,8 +60,10 @@ app.use(express.urlencoded({extended:true}));
 
 
 app.use('/api/v1/auth' , authRouter); 
+app.use('/api/v1/user' , userRouter); 
 
-app.use(errorMiddleWare);
+
+app.use(ErrorMiddleWare);
 
 export default app;
 
