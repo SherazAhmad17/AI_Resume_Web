@@ -27,7 +27,7 @@ const authMiddleWare = asyncHandler(async (req, res, next) => {
         return next(new CustomError(401, "Unauthorized, Invalid token"))
     }
 
-    const user = await User.findById(userId).select("-password -refreshToken");;
+    const user = await User.findById(userId);
 
     if (!user) {
         return next(new CustomError(401, "Unauthorized, User not found"))
