@@ -4,6 +4,8 @@ import CustomError from '../handler/CustomError.js'
 import {generateAccessToken , generateRefreshToken} from "../utils/genrateAccessToken.js"
 import {CookieOptions} from '../utils/cookiesOption.js'
 import jwt from 'jsonwebtoken'
+import {welcomeEmailTemplate} from "../template/registration.js"
+import sendEmail from "../utils/sendMail.js"
 
 const RegisterUser = AsyncHandler(async(req,res,next)=>{
 
@@ -27,6 +29,10 @@ const RegisterUser = AsyncHandler(async(req,res,next)=>{
     if (!user){
         return next(new CustomError(400 ,"User not created"))
     }
+
+    const welcomeEmail = welcomeEmailTemplate (user.name,user.email)
+
+    await sendEmail(user.email,"welcome to our application" , welcomeEmail)
 
     res.status(201).json({
         success:true,

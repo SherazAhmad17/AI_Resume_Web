@@ -29,7 +29,16 @@ const userSchema = new mongoose.Schema({
                 createdAt: Date
             }
         }
-    ]
+    ],
+    forgetPasswordToken:{
+        type:String,
+        default:null
+    },
+    forgetPasswordExpiry:{
+        type:Date,
+        default:null
+    }
+
 
 
 })
