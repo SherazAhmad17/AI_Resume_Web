@@ -34,6 +34,7 @@ const authMiddleWare = asyncHandler(async (req, res, next) => {
     }
 
     req.user = user;
+    req.userId = userId;
 
     next();
 

@@ -6,6 +6,7 @@ import ErrorMiddleWare from "./middleWare/errorMiddleWare.middleware.js";
 import authRouter from "./router/auth.route.js";
 import cookieParser from "cookie-parser";
 import userRouter from "./router/user.route.js";
+import cvRouter from "./router/cv.route.js";
 
 
 dotenv.config();
@@ -61,6 +62,7 @@ app.use(express.urlencoded({extended:true}));
 
 app.use('/api/v1/auth' , authRouter); 
 app.use('/api/v1/user' , userRouter); 
+app.use('/api/v1/cv' , cvRouter); 
 
 
 app.use(ErrorMiddleWare);
