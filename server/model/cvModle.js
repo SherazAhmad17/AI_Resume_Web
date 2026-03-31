@@ -99,6 +99,10 @@ const cvSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId, 
     ref: 'User',
     required: true
+  },
+  templateId: {
+    type:String,
+    default:"american-style"
   }
 
 }, { timestamps: true });

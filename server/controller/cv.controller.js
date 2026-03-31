@@ -10,7 +10,7 @@ const CreateCv = AsyncHandler(async (req, res, next) => {
 
     const { 
       name, email, phone, github, linkedin, 
-      summary, education, skills, projects, experience
+      summary, education, skills, projects, experience,templateId
     } = req.body;
 
     const findId = await User.findById(userId)
@@ -36,7 +36,8 @@ const CreateCv = AsyncHandler(async (req, res, next) => {
       skills,
       projects,
       experience,
-      userId
+      userId,
+      templateId
     })
 
     if(!newCv){
@@ -74,7 +75,7 @@ const updateCv = AsyncHandler(async(req,res,next)=>{
 
     const { 
       name, email, phone, github, linkedin, 
-      summary, education, skills, projects, experience
+      summary, education, skills, projects, experience, templateId
     } = req.body;
 
 
@@ -90,6 +91,7 @@ const updateCv = AsyncHandler(async(req,res,next)=>{
     if (skills) updatedFields.skills = skills;
     if (projects) updatedFields.projects = projects;
     if (experience) updatedFields.experience = experience;
+    if (templateId) updatedFields.templateId = templateId;
 
     const updateCvFields = await Cv.findByIdAndUpdate(id, {$set: updatedFields}, {new: true})
 
