@@ -6,9 +6,10 @@ import authMiddleWare from "../middleWare/authMiddleWare.js";
 
 const cvRouter = Router();
 
-cvRouter.route("/createCv").post(authMiddleWare, validate(CvSchema), CreateCv)
-cvRouter.route("/updateCv/:id").put(authMiddleWare, validate(updateCvSchema) , updateCv)
-cvRouter.route("/getAllCvs").get(authMiddleWare, getAllCvs)
-cvRouter.route("/getSingleCv/:id").get(authMiddleWare, SingleCv)
+cvRouter.use(authMiddleWare)
+
+cvRouter.route("/cv").post(validate(CvSchema), CreateCv).get(getAllCvs)
+cvRouter.route("/cv/:id").put(validate(updateCvSchema) , updateCv).get(SingleCv)
+
 
 export default cvRouter
