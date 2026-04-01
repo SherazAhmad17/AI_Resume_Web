@@ -154,4 +154,31 @@ const SingleCv = AsyncHandler(async(req,res,next)=>{
     })
 })
 
-export { CreateCv, updateCv, getAllCvs, SingleCv }
+const deleteCv = AsyncHandler(async(req,res,next)=>{
+    const {id} = req.params;
+
+    console.log(id)
+
+    const findId = await Cv.findById(id)
+
+    console.log(findId)
+
+    if(!findId){
+        throw new CustomError(404, "Cv not found")
+    }
+
+    if(findId.userId.toString() !== req.userId.toString()){
+        throw new CustomError(403, "Not authorized to delete this CV")
+    }
+
+    await Cv.findByIdAndDelete(id)
+
+    res.status(200).json({
+        success: true,
+        message: 'CV deleted successfully'
+    })
+
+    
+})
+
+export { CreateCv, updateCv, getAllCvs, SingleCv, deleteCv }
