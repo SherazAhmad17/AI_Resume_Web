@@ -70,8 +70,6 @@ const LoginUser = AsyncHandler(async(req,res,next)=>{
         success:true,
         message:"User logged in successfully",
         accessToken: accessToken,
-        refreshToken: refreshToken,
-        user
     })
 
 })
@@ -106,9 +104,9 @@ const RefreshToken = AsyncHandler(async(req,res,next)=>{
     res.cookie("refreshToken" , newRefreshToken , CookieOptions).status(200).json({
         success:true,
         message:"Tokens refreshed successfully",
-        data:{
-            accessToken: newAccessToken,
-        }
+        accessToken: newAccessToken,
+        user:isTokenValid
+       
     })
 })
 
