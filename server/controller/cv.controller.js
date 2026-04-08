@@ -2,6 +2,7 @@ import AsyncHandler from '../handler/AsyncHandler.js'
 import Cv from '../model/cvModle.js'
 import CustomError from '../handler/CustomError.js'
 import User from '../model/user.model.js';
+import uploadToCloudinary from '../utils/uploadToCloudinary.js';
 
 
 const CreateCv = AsyncHandler(async (req, res, next) => {
@@ -13,17 +14,39 @@ const CreateCv = AsyncHandler(async (req, res, next) => {
       summary, education, skills, projects, experience,templateId
     } = req.body;
 
-    const findId = await User.findById(userId)
 
-    if(!findId){
+    const userExist = await User.findById(userId)
+
+    if(!userExist){
         throw new CustomError(404, 'User not found')
     }
 
     const countCv = await Cv.countDocuments({userId})
 
-    if(countCv >= 2){
+    if(countCv >= 100){
         throw new CustomError(400, 'You have reached the maximum number of CVs')
     }
+
+    let profileImage;
+
+    if(req.file){
+        const result = await uploadToCloudinary(
+            {resource_type: "image",
+            buffer: req.file.buffer,
+            folder: "cv-profiles"}
+        )
+
+        if(!result){
+            throw new CustomError(500, 'Failed to upload profile image')
+        }
+
+        profileImage = {
+            secure_url: result.secure_url,
+            public_id: result.public_id
+        }
+    }
+
+
 
     const newCv = await Cv.create({
       name,
@@ -37,7 +60,8 @@ const CreateCv = AsyncHandler(async (req, res, next) => {
       projects,
       experience,
       userId,
-      templateId
+      templateId,
+      profileImage
     })
 
     if(!newCv){

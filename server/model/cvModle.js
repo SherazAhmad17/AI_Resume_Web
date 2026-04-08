@@ -103,6 +103,13 @@ const cvSchema = new mongoose.Schema({
   templateId: {
     type:String,
     default:"american-style"
+  },
+  profileImage: {
+    type: {
+      secure_url: String,
+      public_id: String
+    },
+    default: null
   }
 
 }, { timestamps: true });
