@@ -16,26 +16,25 @@ const app = express();
 
 const isAllowed = ['http://localhost:5173'];
 
-const corsOptions = (req , cb) => {
-
+const corsOptions = (req, cb) => {
     const origin = req.headers.origin;
 
-    if(!origin){
-        return cb(null, true);
+    if (!origin) {
+        return cb(null, { origin: true, credentials: true });
     }
 
-    if(isAllowed.includes(origin)){
-        return cb(
-            null,
-            {
-                origin: true,
-                methods:["GET" , "POST" , "PUT" , "PATCH" , "DELETE"],
-                credentials: true,
-                allowedHeaders: ['Content-Type', 'Authorization']
-            }
-        )
+    if (isAllowed.includes(origin)) {
+        return cb(null, {
+            origin: true,
+            methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+            credentials: true,
+            allowedHeaders: ['Content-Type', 'Authorization']
+        });
     }
-}
+
+    
+    return cb(new Error("Not allowed by CORS"));
+};
 
 app.use(cors(corsOptions));
 

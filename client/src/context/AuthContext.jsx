@@ -37,7 +37,7 @@ const AuthContextProvider = ({ children }) => {
             },
             async (error) => {
                 const faildReq = error.config;
-                if (error.response?.status === 401 || error.response?.status === 403 || !faildReq._retry) {
+                if ((error.response?.status === 401 || error.response?.status === 403) && !faildReq._retry) {
                     faildReq._retry = true;
                     try {
                         const res = await AuthApi.refreshToken();
@@ -45,6 +45,8 @@ const AuthContextProvider = ({ children }) => {
                         faildReq.headers.Authorization = `Bearer ${res.data.accessToken}`;
                         setAccessToken(res.data.accessToken);
                         setUser(res.data.user);
+
+                        return api(faildReq);
                     } catch (error) {
                         setAccessToken(null);
                         setUser(null);
