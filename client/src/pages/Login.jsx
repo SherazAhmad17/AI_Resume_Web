@@ -6,10 +6,10 @@ import { AuthApi } from "../api/AuthApi";
 import LogoutButton from "../components/ui/buttons/logoutBtn";
 
 const Login = () => {
-  const {register, handleSubmit, reset, formState:{errors, isSubmitting}} = useForm({
+  const {register, handleSubmit, formState:{errors, isSubmitting}} = useForm({
       resolver: zodResolver(LoginSchema),
-      mode: "onBlur",
-      reValidateMode: "onBlur",
+      mode: "onChange",
+      reValidateMode: "onChange",
       defaultValues:{
         email: "",
         password: ""
