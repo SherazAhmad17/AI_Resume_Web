@@ -11,6 +11,7 @@ import Services from './pages/Service.jsx';
 import Login from "./pages/Login.jsx"
 import Register from './pages/register.jsx';
 import ProctectedRoutes from './routes/ProctectedRoutes.jsx';
+import Profile from './pages/UserProfile.jsx';
 const router = createBrowserRouter([
   {
     path: '/',
@@ -47,26 +48,30 @@ const router = createBrowserRouter([
       {
         path: 'blog/details/:id',
         element: <BlogDetails />,
-      },  
+      },
       {
         path: 'contact-us',
         element: <Contact />,
       },
       {
         path: 'services',
-        element: <Services />,  
+        element: <Services />,
       },
       {
         element: <ProctectedRoutes />, // Ye check karega authentication
         children: [
+          {
+            path: 'profile',
+            element: <Profile />,
+          },
           // Jo bhi routes is block ke andar hongi, wo protect ho jayengi!
           {
-             path: 'dashboard',
-             element: <div>My Dashboard</div>, // Example: Tumhara Dashboard page
+            path: 'dashboard',
+            element: <div>My Dashboard</div>, // Example: Tumhara Dashboard page
           },
           {
-             path: 'create-cv',
-             element: <div>CV Builder</div>,   // Example: CV bananay wala page
+            path: 'create-cv',
+            element: <div>CV Builder</div>,   // Example: CV bananay wala page
           }
         ]
       }

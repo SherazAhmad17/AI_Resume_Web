@@ -70,6 +70,7 @@ const LoginUser = AsyncHandler(async (req, res, next) => {
         success: true,
         message: "User logged in successfully",
         accessToken: accessToken,
+        user: user
     })
 
 })
@@ -79,19 +80,19 @@ const RefreshToken = AsyncHandler(async (req, res, next) => {
     const incomingRefreshToken = req.cookies.refreshToken
 
     if (!incomingRefreshToken) {
-        return next(new CustomError(400, "Refresh token not found"))
+        return next(new CustomError(401, "Refresh token not found"))
     }
 
     const decoded = jwt.verify(incomingRefreshToken, process.env.REFRESH_TOKEN_SECRET)
 
     if (!decoded.userId) {
-        return next(new CustomError(400, "Invalid refresh token"))
+        return next(new CustomError(401, "Invalid refresh token"))
     }
 
     const isTokenValid = await User.findOne({ "refreshToken.token": incomingRefreshToken });
 
     if (!isTokenValid) {
-        return next(new CustomError(400, "Invalid refresh token"))
+        return next(new CustomError(401, "Invalid refresh token"))
     }
 
     const newAccessToken = generateAccessToken(isTokenValid)
@@ -116,7 +117,7 @@ const RefreshToken = AsyncHandler(async (req, res, next) => {
 })
 
 const logOut = AsyncHandler(async (req, res, next) => {
-    
+
     await User.findByIdAndUpdate(
         req.user._id,
         {
@@ -126,7 +127,7 @@ const logOut = AsyncHandler(async (req, res, next) => {
         }
     )
 
-    res.clearCookie("refreshToken" , CookieOptions).status(200).json({
+    res.clearCookie("refreshToken", CookieOptions).status(200).json({
         success: true,
         message: "User logged out successfully"
     })
