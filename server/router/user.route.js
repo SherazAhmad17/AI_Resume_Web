@@ -1,6 +1,6 @@
 import { Router } from "express";
 import authMiddleWare from "../middleWare/authMiddleWare.js";
-import { changeName, ChangePassword, forgetPassword, resetPassword } from "../controller/user.controller.js";
+import { changeName, ChangePassword , forgetPassword, resetPassword } from "../controller/user.controller.js";
 import validate from "../middleWare/validate.js";
 import changePasswordSchema from "../schemas/changePassword.schema.js";
 import forgetPasswordSchema from "../schemas/forgetPassword.schema.js"
