@@ -3,6 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import RegisterSchema from "../validation/RegisterSchema"
 import { AuthApi } from "../api/AuthApi"
 import { useNavigate } from "react-router-dom"
+import toast from "react-hot-toast"
 
 const Register = () => {
     const navigate = useNavigate()
@@ -22,14 +23,16 @@ const Register = () => {
     async function onSubmit(data) {
         try {
             const res = await AuthApi.register(data)
-            console.log(res, "register response")
+            toast.success("Account created successfully!")
             navigate("/login")
         } catch (error) {
             // Optional chaining (?.) added to prevent app crash if server is down
             if (error?.response?.data?.message) {
+                toast.error(error.response.data.message)
                 setError("general", { type: "server", message: error.response.data.message })
             }
             else {
+                toast.error("Failed to register user")
                 setError("general", { type: "server", message: "Failed to register user" })
             }
         }

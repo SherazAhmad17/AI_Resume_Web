@@ -15,7 +15,7 @@ dotenv.config();
 
 const app = express();
 
-const isAllowed = ['http://localhost:5173'];
+const isAllowed = ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175'];
 
 const corsOptions = (req, cb) => {
     const origin = req.headers.origin;
@@ -51,7 +51,7 @@ const rateLimiter = limiter({
     }
 });
 
-app.use(rateLimiter);
+// app.use(rateLimiter);
 
 app.use(express.json());
 

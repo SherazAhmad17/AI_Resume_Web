@@ -50,13 +50,13 @@ const LoginUser = AsyncHandler(async (req, res, next) => {
     const user = await User.findOne({ email }).select("+password")
 
     if (!user) {
-        return next(new CustomError(400, "Invalid email or password"))
+        return next(new CustomError(404, "User does not exist with this email"))
     }
 
     const comparePassword = await user.comparePassword(password);
 
     if (!comparePassword) {
-        return next(new CustomError(400, "Invalid email or password"))
+        return next(new CustomError(400, "Incorrect password provided"))
     }
 
     let accessToken = generateAccessToken(user)

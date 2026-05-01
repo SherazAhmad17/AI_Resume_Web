@@ -8,7 +8,6 @@ import { imageMulter } from "../middleWare/imageMulter.middleWare.js";
 
 const aiRouter = Router();
 
-
 const allowedFileTypes = [
   "application/pdf", 
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
@@ -16,9 +15,9 @@ const allowedFileTypes = [
 
 const uploadMiddleware = imageMulter(5, allowedFileTypes);
 
-
 aiRouter.route("/upload-and-extract").post(authMiddleWare, uploadMiddleware.single("resume_file"), parseUploadedCV);
 
-aiRouter.route("/ai-generate").post(validate(aiGenSchema),authMiddleWare, generateAIContent)
+// AI Generation Route
+aiRouter.route("/ai-generate").post(authMiddleWare, validate(aiGenSchema), generateAIContent);
 
 export default aiRouter;

@@ -1,6 +1,6 @@
-import pdfParse from "pdf-extraction"; // ✅ Naya modern package
+import pdfParse from "pdf-extraction"; 
 import mammoth from "mammoth";
-import { genAI } from "../config/gemni.js";
+import { groq } from "../config/groq.js";
 import CustomError from "../handler/CustomError.js";
 import AsyncHandler from "../handler/AsyncHandler.js";
 
@@ -8,14 +8,13 @@ export const parseUploadedCV = AsyncHandler(async (req, res, next) => {
     try {
         // STEP 1: Gatekeeper checking
         if (!req.file) {
-            return next(new CustomError(400, "upload pdf or docx file"));
+            return next(new CustomError(400, "Please upload a pdf or docx file"));
         }
 
         let rawText = "";
 
         // STEP 2: X-Ray Machine (Text Extraction)
         if (req.file.mimetype === "application/pdf") {
-            // 🔥 Ab yeh seedha function ki tarah chalega bina phate
             const pdfData = await pdfParse(req.file.buffer);
             rawText = pdfData.text;
         } else if (req.file.mimetype === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
@@ -25,19 +24,13 @@ export const parseUploadedCV = AsyncHandler(async (req, res, next) => {
 
         // Agar file se text nikla hi nahi
         if (!rawText || rawText.trim() === "") {
-            return next(new CustomError(400, "unable to read text from the file"));
+            return next(new CustomError(400, "Unable to read text from the file"));
         }
 
-        // STEP 3: Smart Robot Setup (Gemini AI)
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-
-        const prompt = `
-        You are an expert CV parser. Read the following raw text from a resume.
-        Extract the information strictly into the provided JSON structure.
-        Do NOT add markdown, conversational text, or backticks (\`\`\`). Return ONLY valid JSON.
+        // STEP 3: Smart Robot Setup (Groq AI)
+        const systemContent = `You are an expert CV parser. Extract the information from the raw resume text strictly into the provided JSON structure.
         If a field is not found in the text, leave it as an empty string "".
-        
-        Required JSON Structure:
+        Output MUST be a JSON object with this exact structure:
         {
             "name": "",
             "email": "",
@@ -46,28 +39,33 @@ export const parseUploadedCV = AsyncHandler(async (req, res, next) => {
             "linkedin": "",
             "summary": "Write a 2-line professional summary based on the text if not provided",
             "education": [
-            { "degree": "", "institute": "", "year": "" }
+                { "degree": "", "institute": "", "year": "" }
             ],
             "skills": ["skill1", "skill2"],
             "projects": [
-            { "title": "", "description": "", "githubLink": "", "liveLink": "" }
+                { "title": "", "description": "", "githubLink": "", "liveLink": "" }
             ],
             "experience": [
-            { "role": "", "company": "", "duration": "", "description": "" }
+                { "role": "", "company": "", "duration": "", "description": "" }
             ]
         }
+        The response must contain ONLY the JSON object and nothing else.`;
 
-        Raw Text:
-        ${rawText}
-        `;
+        const userContent = `Raw Resume Text:\n${rawText}`;
 
-        // Robot ko text de kar jawab ka wait karo
-        const result = await model.generateContent(prompt);
-        let textResult = result.response.text();
+        // Robot ko text de kar jawab ka wait karo using Groq
+        const response = await groq.chat.completions.create({
+            model: "llama-3.1-8b-instant", // You can also use llama3-70b-8192 if you need even smarter parsing
+            response_format: { type: "json_object" }, // Strictly enforce JSON
+            temperature: 0.1, // Very low temperature so it extracts exactly what is there
+            messages: [
+                { role: "system", content: systemContent },
+                { role: "user", content: userContent }
+            ]
+        });
 
         // STEP 4: Validation / Safai
-        textResult = textResult.replace(/```json/g, "").replace(/```/g, "").trim();
-        
+        const textResult = response.choices[0].message.content;
         const parsedCVData = JSON.parse(textResult);
 
         // STEP 5: Wapis Frontend ko bhej do!
@@ -80,6 +78,7 @@ export const parseUploadedCV = AsyncHandler(async (req, res, next) => {
     } catch (error) {
         console.error("CV Parsing Error:", error);
         
+        // Handle specific JSON parsing errors from the AI output
         if (error instanceof SyntaxError) {
             return res.status(500).json({ 
                 success: false, 
@@ -87,6 +86,7 @@ export const parseUploadedCV = AsyncHandler(async (req, res, next) => {
             });
         }
 
+        // Handle general server errors
         return res.status(500).json({ 
             success: false, 
             message: "Server error. CV extract nahi ho saka." 

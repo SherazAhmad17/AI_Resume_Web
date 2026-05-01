@@ -4,6 +4,7 @@ import LoginSchema from "../validation/loginSchema";
 import { useAuth } from "../hooks/authContext";
 import { AuthApi } from "../api/AuthApi";
 import LogoutButton from "../components/ui/buttons/logoutBtn";
+import toast from "react-hot-toast";
 
 const Login = () => {
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
@@ -23,8 +24,9 @@ const Login = () => {
       const res = await AuthApi.login(data)
       setAccessToken(res.data.accessToken)
       setUser(res.data.user)
+      toast.success("Logged in successfully!")
     } catch (error) {
-      console.log(error)
+      toast.error(error?.response?.data?.message || "Failed to log in")
     }
   }
 
