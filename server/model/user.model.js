@@ -37,7 +37,17 @@ const userSchema = new mongoose.Schema({
     forgetPasswordExpiry:{
         type:Date,
         default:null
+    },
+    profilePicture: {
+    url: {
+        type: String,
+        required: true // or false, depending on your business logic
+    },
+    public_id: {
+        type: String,
+        required: true
     }
+}
 
 
 

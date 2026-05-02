@@ -8,6 +8,7 @@ const AuthContextProvider = ({ children }) => {
 
     const [user, setUser] = useState(null);
     const [accessToken, setAccessToken] = useState(null);
+    const [loading, setLoading] = useState(true);
     let isAuth = accessToken ? true : false;
 
     useLayoutEffect(() => {
@@ -67,6 +68,8 @@ const AuthContextProvider = ({ children }) => {
             } catch (error) {
                 setAccessToken(null);
                 setUser(null);
+            } finally {
+                setLoading(false);
             }
         }
         restoreSession();
@@ -74,7 +77,7 @@ const AuthContextProvider = ({ children }) => {
 
 
     return (
-        <AuthContext.Provider value={{user,setUser,setAccessToken,accessToken,isAuth}}>
+        <AuthContext.Provider value={{user,setUser,setAccessToken,accessToken,isAuth,loading}}>
             {children}
         </AuthContext.Provider>
     )

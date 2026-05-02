@@ -1,1 +1,16 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
 @import "tailwindcss";
+
+@layer base {
+  html, body {
+    font-family: 'Outfit', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Ensure all buttons and inputs use the same font */
+button, input, optgroup, select, textarea {
+  font-family: 'Outfit', sans-serif !important;
+}

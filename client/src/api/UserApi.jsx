@@ -6,5 +6,8 @@ export const UserApi = {
     },
     updateProfile: (data) => {
         return api.put("/user/update-profile", data);
+    },
+    changePassword: (data) => {
+        return api.post("/user/change-password", data);
     }
 }

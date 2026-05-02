@@ -5,6 +5,7 @@ const RegisterSchema = z.object({
     email: z.email(),
     password: z.string().min(6, "Password must be at least 6 characters").max(100, "Password must be less than 100 characters"),
     gender: z.enum(["male", "female", "other"], "gender must be either male or female or other"),
+    profilePicture: z.any().optional(),
 })
 
 export default RegisterSchema;

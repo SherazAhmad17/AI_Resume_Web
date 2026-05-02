@@ -6,6 +6,10 @@ import { useState, useContext } from "react";
 import { Link } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext.jsx";
 import { styled } from "@mui/material/styles";
+import PersonIcon from "@mui/icons-material/Person";
+import DashboardIcon from "@mui/icons-material/Dashboard";
+import LogoutIcon from "@mui/icons-material/Logout";
+import { UserApi } from "../../api/UserApi";
 
 // Move styled components OUTSIDE the main function to prevent re-rendering performance issues
 const StyledBadge = styled(Badge)(({ theme }) => ({
@@ -17,13 +21,24 @@ const StyledBadge = styled(Badge)(({ theme }) => ({
 }));
 
 const Header = () => {
-  const { isAuth, user } = useContext(AuthContext);
+  const { isAuth, user, setUser, setAccessToken } = useContext(AuthContext);
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedLanguage, setSelectedLanguage] = useState("English");
   const [mobileOpen, setMobileOpen] = useState(false);
 
   // Profile Menu State
   const [profileMenuAnchor, setProfileMenuAnchor] = useState(null);
+
+  const handleLogout = async () => {
+    try {
+      await UserApi.logout();
+      setUser(null);
+      setAccessToken(null);
+      setProfileMenuAnchor(null);
+    } catch (error) {
+      console.log("Logout failed", error);
+    }
+  };
 
   const handleProfileMenuToggle = (event) => {
     if (profileMenuAnchor) {
@@ -112,12 +127,30 @@ const Header = () => {
             <Link key={item.pageName} to={item.path} style={{ textDecoration: "none" }}>
               <Typography
                 sx={{
-                  fontFamily: "Inter, sans-serif",
+                  fontFamily: "'Outfit', sans-serif",
                   fontSize: "14px",
                   fontWeight: 500,
                   color: "#1F2937",
                   cursor: "pointer",
                   whiteSpace: "nowrap",
+                  position: "relative",
+                  transition: "color 0.3s ease",
+                  "&::after": {
+                    content: '""',
+                    position: "absolute",
+                    width: "0%",
+                    height: "2px",
+                    bottom: "-4px",
+                    left: "0",
+                    backgroundColor: "#2563EB",
+                    transition: "width 0.3s ease-in-out",
+                  },
+                  "&:hover::after": {
+                    width: "100%",
+                  },
+                  "&:hover": {
+                    color: "#2563EB",
+                  },
                 }}
               >
                 {item.pageName}
@@ -155,31 +188,82 @@ const Header = () => {
         {/* Auth (desktop) */}
         <Box sx={{ display: { xs: "none", md: "flex" }, alignItems: "center", gap: "12px", flexShrink: 0 }}>
           {isAuth ? (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }} onClick={handleProfileMenuToggle}>
+            <>
+            <Box 
+              sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '10px', 
+                cursor: 'pointer',
+                padding: '4px 8px 4px 12px',
+                borderRadius: '50px',
+                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                border: '1px solid transparent',
+                backgroundColor: Boolean(profileMenuAnchor) ? '#F3F4F6' : 'transparent',
+                borderColor: Boolean(profileMenuAnchor) ? '#E5E7EB' : 'transparent',
+                '&:hover': {
+                  backgroundColor: '#F3F4F6',
+                  borderColor: '#E5E7EB',
+                },
+                '&:active': {
+                  backgroundColor: '#E5E7EB',
+                  transform: 'scale(0.97)'
+                }
+              }} 
+              onClick={handleProfileMenuToggle}
+            >
+              <Typography sx={{ fontSize: "14px", fontWeight: 600, color: "#374151", display: { xs: "none", sm: "block" }, fontFamily: "'Outfit', sans-serif" }}>
+                Hi, {user?.name?.split(" ")[0] || "User"}
+              </Typography>
               <StyledBadge overlap="circular" anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }} variant="dot">
-                <Avatar sx={{ bgcolor: "#2563EB", width: 36, height: 36 }}>
-                  {user?.name ? user.name[0].toUpperCase() : "U"}
+                <Avatar 
+                  src={user?.profilePicture?.url || ""} 
+                  sx={{ 
+                    bgcolor: "#2563EB", 
+                    width: 36, 
+                    height: 36,
+                    fontSize: '14px',
+                    fontWeight: 700,
+                    boxShadow: '0 2px 4px rgba(37, 99, 235, 0.2)'
+                  }}
+                >
+                  {!user?.profilePicture?.url && (user?.name ? user.name[0].toUpperCase() : "U")}
                 </Avatar>
               </StyledBadge>
-
-              <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-                <Typography sx={{ fontSize: "14px", fontWeight: 600, color: "#1F2937", lineHeight: 1.2 }}>
-                  {user?.name || "User"}
-                </Typography>
-                <Typography sx={{ fontSize: "11px", color: "#44b700", fontWeight: 500 }}>Logged In</Typography>
-              </Box>
+            </Box>
 
               {/* Dropdown Menu when Avatar is clicked */}
               <Menu
                 anchorEl={profileMenuAnchor}
                 open={Boolean(profileMenuAnchor)}
                 onClose={() => setProfileMenuAnchor(null)}
-                sx={{ mt: 1 }}
+                sx={{ 
+                  mt: 1.5,
+                  "& .MuiPaper-root": {
+                    boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.1)",
+                    borderRadius: "12px",
+                    minWidth: "180px",
+                    px: 1,
+                    py: 1
+                  }
+                }}
+                transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
               >
-                <MenuItem component={Link} to="/profile" onClick={() => setProfileMenuAnchor(null)}>My Profile</MenuItem>
-                <MenuItem component={Link} to="/dashboard" onClick={() => setProfileMenuAnchor(null)}>Dashboard</MenuItem>
+                <MenuItem component={Link} to="/profile" onClick={() => setProfileMenuAnchor(null)} sx={{ borderRadius: "8px", mb: 0.5, gap: 1.5 }}>
+                  <PersonIcon fontSize="small" sx={{ color: "#64748B" }} />
+                  <Typography sx={{ fontSize: "14px", fontWeight: 500, color: "#1E293B" }}>My Profile</Typography>
+                </MenuItem>
+                <MenuItem component={Link} to="/dashboard" onClick={() => setProfileMenuAnchor(null)} sx={{ borderRadius: "8px", mb: 0.5, gap: 1.5 }}>
+                  <DashboardIcon fontSize="small" sx={{ color: "#64748B" }} />
+                  <Typography sx={{ fontSize: "14px", fontWeight: 500, color: "#1E293B" }}>Dashboard</Typography>
+                </MenuItem>
+                <MenuItem onClick={handleLogout} sx={{ borderRadius: "8px", gap: 1.5 }}>
+                  <LogoutIcon fontSize="small" sx={{ color: "#EF4444" }} />
+                  <Typography sx={{ fontSize: "14px", fontWeight: 500, color: "#EF4444" }}>Log out</Typography>
+                </MenuItem>
               </Menu>
-            </Box>
+            </>
           ) : (
             <>
               <Typography

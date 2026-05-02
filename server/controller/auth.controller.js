@@ -6,6 +6,8 @@ import { CookieOptions } from '../utils/cookiesOption.js'
 import jwt from 'jsonwebtoken'
 import { welcomeEmailTemplate } from "../template/registration.js"
 import sendEmail from "../utils/sendMail.js"
+import uploadToCloudinary from "../utils/uploadToCloudinary.js"
+import deleteFromCloudinary from "../utils/deleteFromCloudinary.js"
 
 const RegisterUser = AsyncHandler(async (req, res, next) => {
 
@@ -19,15 +21,39 @@ const RegisterUser = AsyncHandler(async (req, res, next) => {
         return next(new CustomError(400, "User already exist"))
     }
 
-    const user = await User.create({
-        name,
-        email,
-        password,
-        gender
-    })
+    let uploadedImage = null;
+    if (req.file) {
+        try {
+            uploadedImage = await uploadToCloudinary({
+                buffer: req.file.buffer,
+                folder: "user_profiles"
+            });
+        } catch (error) {
+            return next(new CustomError(500, "Image upload failed. Please try again."));
+        }
+    }
 
-    if (!user) {
-        return next(new CustomError(400, "User not created"))
+    let user;
+    try {
+        user = await User.create({
+            name,
+            email,
+            password,
+            gender,
+
+            ...(uploadedImage && {
+                profilePicture: {
+                    url: uploadedImage.secure_url,
+                    public_id: uploadedImage.public_id
+                }
+            })
+        });
+    } catch (error) {
+        
+        if (uploadedImage?.public_id) {
+            await deleteFromCloudinary(uploadedImage.public_id).catch(console.error);
+        }
+        return next(new CustomError(400, "Failed to create user in database"));
     }
 
     const welcomeEmail = welcomeEmailTemplate(user.name, user.email)
@@ -50,13 +76,13 @@ const LoginUser = AsyncHandler(async (req, res, next) => {
     const user = await User.findOne({ email }).select("+password")
 
     if (!user) {
-        return next(new CustomError(404, "User does not exist with this email"))
+        return next(new CustomError(404, "invalid email or password"))
     }
 
     const comparePassword = await user.comparePassword(password);
 
     if (!comparePassword) {
-        return next(new CustomError(400, "Incorrect password provided"))
+        return next(new CustomError(400, "invalid email or password"))
     }
 
     let accessToken = generateAccessToken(user)

@@ -1,10 +1,12 @@
 import { useForm } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
 import LoginSchema from "../validation/loginSchema";
 import { useAuth } from "../hooks/authContext";
 import { AuthApi } from "../api/AuthApi";
 import LogoutButton from "../components/ui/buttons/logoutBtn";
 import toast from "react-hot-toast";
+import { useEffect } from "react";
 
 const Login = () => {
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
@@ -17,7 +19,17 @@ const Login = () => {
     }
   })
 
-  const { setUser, setAccessToken, isAuth } = useAuth()
+  const navigate = useNavigate()
+  const { setUser, setAccessToken, isAuth, loading } = useAuth()
+
+  // If already authenticated, redirect to profile
+  useEffect(() => {
+    if (!loading && isAuth) {
+      navigate("/profile");
+    }
+  }, [isAuth, loading, navigate])
+
+  if (loading) return null; // Or a spinner
 
   const onSubmit = async (data) => {
     try {
@@ -25,6 +37,7 @@ const Login = () => {
       setAccessToken(res.data.accessToken)
       setUser(res.data.user)
       toast.success("Logged in successfully!")
+      navigate("/profile")
     } catch (error) {
       toast.error(error?.response?.data?.message || "Failed to log in")
     }

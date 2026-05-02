@@ -3,10 +3,21 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import RegisterSchema from "../validation/RegisterSchema"
 import { AuthApi } from "../api/AuthApi"
 import { useNavigate } from "react-router-dom"
+import { useAuth } from "../hooks/authContext"
 import toast from "react-hot-toast"
+import { useEffect } from "react"
 
 const Register = () => {
     const navigate = useNavigate()
+    const { isAuth, loading } = useAuth()
+
+    useEffect(() => {
+        if (!loading && isAuth) {
+            navigate("/profile");
+        }
+    }, [isAuth, loading, navigate])
+
+    if (loading) return null;
 
     const { register, reset, handleSubmit, formState: { errors, isSubmitting }, setError } = useForm({
         resolver: zodResolver(RegisterSchema),
@@ -22,9 +33,19 @@ const Register = () => {
 
     async function onSubmit(data) {
         try {
-            const res = await AuthApi.register(data)
-            toast.success("Account created successfully!")
-            navigate("/login")
+            const formData = new FormData();
+            formData.append('name', data.name);
+            formData.append('email', data.email);
+            formData.append('password', data.password);
+            formData.append('gender', data.gender);
+            
+            if (data.profilePicture && data.profilePicture.length > 0) {
+                formData.append('profilePicture', data.profilePicture[0]);
+            }
+
+            const res = await AuthApi.register(formData);
+            toast.success("Account created successfully!");
+            navigate("/login");
         } catch (error) {
             // Optional chaining (?.) added to prevent app crash if server is down
             if (error?.response?.data?.message) {
@@ -106,6 +127,17 @@ const Register = () => {
                             </label>
                         </div>
                         {errors.gender && <p className="text-red-500 text-xs mt-1 ml-1">{errors.gender.message}</p>}
+                    </div>
+
+                    {/* Profile Picture Input */}
+                    <div className="pt-2">
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Profile Picture (Optional)</label>
+                        <input 
+                            type="file" 
+                            accept="image/*"
+                            {...register("profilePicture")} 
+                            className="w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-all cursor-pointer"
+                        />
                     </div>
 
                     {/* Submit Button */}

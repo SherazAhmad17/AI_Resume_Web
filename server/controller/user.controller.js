@@ -4,6 +4,8 @@ import User from "../model/user.model.js"
 import { resetPasswordEmailTemplate } from "../template/resetPassword.js"
 import sendEmail from "../utils/sendMail.js"
 import crypto from "crypto"
+import uploadToCloudinary from "../utils/uploadToCloudinary.js"
+import deleteFromCloudinary from "../utils/deleteFromCloudinary.js"
 
 // const User = AsyncHandler(async(req,res,next)=>{
 //     res.status(200).json({
@@ -118,9 +120,8 @@ const resetPassword = AsyncHandler(async (req, res, next) => {
 })
 
 
-const changeName = AsyncHandler(async (req, res, next) => {
-    const { name } = req.body;
-
+const updateProfile = AsyncHandler(async (req, res, next) => {
+    const { name, gender } = req.body;
     const user = req.user;
 
     if (!name) {
@@ -128,15 +129,39 @@ const changeName = AsyncHandler(async (req, res, next) => {
     }
 
     user.name = name;
-    await user.save()
+    if (gender) {
+        user.gender = gender;
+    }
+
+    if (req.file) {
+        try {
+            const uploadedImage = await uploadToCloudinary({
+                buffer: req.file.buffer,
+                folder: "user_profiles"
+            });
+            
+            if (user.profilePicture && user.profilePicture.public_id) {
+                await deleteFromCloudinary(user.profilePicture.public_id).catch(console.error);
+            }
+
+            user.profilePicture = {
+                url: uploadedImage.secure_url,
+                public_id: uploadedImage.public_id
+            };
+        } catch (error) {
+            return next(new Error("Image upload failed"));
+        }
+    }
+
+    await user.save();
 
     res.status(200).json({
         success: true,
-        message: "name changed successfully",
+        message: "Profile updated successfully",
         user
     })
 })
 
 
 
-export { ChangePassword, forgetPassword, resetPassword, changeName };
+export { ChangePassword, forgetPassword, resetPassword, updateProfile };
