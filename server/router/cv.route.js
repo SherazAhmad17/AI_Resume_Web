@@ -14,5 +14,4 @@ cvRouter.use(authMiddleWare)
 cvRouter.route("/cv").post(uploadProfile.single("profileImage"),parseJsonFields(["education", "skills", "projects", "experience"]),validate(createCvSchema), CreateCv).get(getAllCvs)
 cvRouter.route("/cv/:id").put(uploadProfile.single("profileImage"),parseJsonFields(["education", "skills", "projects", "experience"]),validate(updateCvSchema) , updateCv).get(SingleCv).delete(deleteCv)
 
-// uploadProfile.single("profileImage"),parseJsonFields(["education", "skills", "projects", "experience"]),
 export default cvRouter
