@@ -6,138 +6,100 @@ import uploadToCloudinary from '../utils/uploadToCloudinary.js';
 
 
 const CreateCv = AsyncHandler(async (req, res, next) => {
-
     const userId = req.userId;
 
-    const {
-        name, email, phone, github, linkedin,
-        summary, education, skills, projects, experience, templateId
-    } = req.body;
+    const data = req.body;
 
+    const user = await User.exists({ _id: userId });
 
-    const userExist = await User.findById(userId)
+    if (!user) throw new CustomError(404, 'User not found')
 
-    if (!userExist) {
-        throw new CustomError(404, 'User not found')
-    }
-
-    const countCv = await Cv.countDocuments({ userId })
-
-    if (countCv >= 100) {
-        throw new CustomError(400, 'You have reached the maximum number of CVs')
-    }
-
-    let profileImage;
+    let profileImage = null;
 
     if (req.file) {
-        const result = await uploadToCloudinary(
-            {
-                resource_type: "image",
-                buffer: req.file.buffer,
-                folder: "cv-profiles"
-            }
-        )
-
-        if (!result) {
-            throw new CustomError(500, 'Failed to upload profile image')
-        }
-
-        profileImage = {
-            secure_url: result.secure_url,
-            public_id: result.public_id
-        }
+        const result = await uploadToCloudinary({
+            buffer: req.file.buffer,
+            resource_type: "image",
+            public_id: `profile_${userId}_${Date.now()}`
+        });
+        profileImage = { secure_url: result.secure_url, public_id: result.public_id };
     }
 
-
-
-    const newCv = await Cv.create({
-        name,
-        email,
-        phone,
-        github,
-        linkedin,
-        summary,
-        education,
-        skills,
-        projects,
-        experience,
+    const cv = await Cv.create({
         userId,
-        templateId,
+        ...data,
         profileImage
     })
 
-    if (!newCv) {
+    if (!cv) {
         throw new CustomError(500, 'Failed to create CV')
     }
 
     res.status(201).json({
-        success: true,
         message: 'CV created successfully',
-        data: newCv
+        data: cv
     })
-
 
 
 
 })
 
-
 const updateCv = AsyncHandler(async (req, res, next) => {
-
     const { id } = req.params;
     const userId = req.userId;
 
-    //db check
-    const findCv = await Cv.findById(id)
 
-    if (!findCv) {
-        throw new CustomError(404, 'CV not found')
+    const cv = await Cv.findById(id);
+
+    if (!cv) {
+        throw new CustomError(404, 'CV not found');
     }
 
-    //check if the user is the owner of the cv
-    if (findCv.userId.toString() !== userId.toString()) {
-        throw new CustomError(403, 'Not authorized to update this CV')
+
+    if (cv.userId.toString() !== userId.toString()) {
+        throw new CustomError(403, 'Not authorized to update this CV');
     }
 
-    const {
-        name, email, phone, github, linkedin,
-        summary, education, skills, projects, experience, templateId
-    } = req.body;
+
+    const data = Object.fromEntries(
+        Object.entries(req.body).filter(([_, value]) => value !== undefined && value !== null)
+    );
 
 
-    const updatedFields = {};
+    delete data.userId;
+    delete data._id;
 
-    if (name) updatedFields.name = name;
-    if (email) updatedFields.email = email;
-    if (phone) updatedFields.phone = phone;
-    if (github) updatedFields.github = github;
-    if (linkedin) updatedFields.linkedin = linkedin;
-    if (summary) updatedFields.summary = summary;
-    if (education) updatedFields.education = education;
-    if (skills) updatedFields.skills = skills;
-    if (projects) updatedFields.projects = projects;
-    if (experience) updatedFields.experience = experience;
-    if (templateId) updatedFields.templateId = templateId;
 
-    const updateCvFields = await Cv.findByIdAndUpdate(id, { $set: updatedFields }, { new: true })
+    if (req.file) {
+        if (cv.profileImage && cv.profileImage.public_id) {
+            await deleteFromCloudinary(cv.profileImage.public_id);
+        }
 
-    if (!updateCvFields) {
-        throw new CustomError(500, 'Failed to update CV')
+        const result = await uploadToCloudinary({
+            buffer: req.file.buffer,
+            resource_type: "image",
+            public_id: `profile_${userId}_${Date.now()}`
+        });
+
+        data.profileImage = {
+            secure_url: result.secure_url,
+            public_id: result.public_id
+        };
     }
 
-    console.log(updateCvFields)
+
+    Object.assign(cv, data);
+
+
+    await cv.save();
+
 
     res.status(200).json({
         success: true,
         message: 'CV updated successfully',
-        data: updateCvFields
-    })
-
-
-
-
-
-})
+        data: cv
+    });
+});
 
 const getAllCvs = AsyncHandler(async (req, res, next) => {
 
