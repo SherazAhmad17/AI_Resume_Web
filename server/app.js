@@ -20,8 +20,14 @@ const isAllowed = ['http://localhost:5173', 'http://localhost:5174', 'http://loc
 const corsOptions = (req, cb) => {
     const origin = req.headers.origin;
 
+    // No origin = Postman / curl / server-to-server — allow in all envs
     if (!origin) {
-        return cb(null, { origin: true, credentials: true });
+        return cb(null, {
+            origin: true,
+            methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+            credentials: true,
+            allowedHeaders: ['Content-Type', 'Authorization']
+        });
     }
 
     if (isAllowed.includes(origin)) {
@@ -33,15 +39,15 @@ const corsOptions = (req, cb) => {
         });
     }
 
-    
-    return cb(new Error("Not allowed by CORS"));
+    // Block everything else
+    return cb(null, { origin: false });
 };
 
 app.use(cors(corsOptions));
 
 const rateLimiter = limiter({
     windowMs: 15 * 60 * 1000,
-    limit:100,
+    limit: 100,
     legacyHeaders: false,
     standardHeaders: true,
     handler: (req, res) => {
@@ -57,13 +63,13 @@ app.use(express.json());
 
 app.use(cookieParser())
 
-app.use(express.urlencoded({extended:true}));
+app.use(express.urlencoded({ extended: true }));
 
 
-app.use('/api/v1/auth' , authRouter); 
-app.use('/api/v1/user' , userRouter); 
-app.use('/api/v1/cv' , cvRouter); 
-app.use('/api/v1/ai' , aiRouter); 
+app.use('/api/v1/auth', authRouter);
+app.use('/api/v1/user', userRouter);
+app.use('/api/v1/cv', cvRouter);
+app.use('/api/v1/ai', aiRouter);
 
 
 app.use(ErrorMiddleWare);

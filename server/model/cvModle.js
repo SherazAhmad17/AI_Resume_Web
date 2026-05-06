@@ -176,11 +176,6 @@ const cvSchema = new mongoose.Schema({
   templateId: {
     type: String,
     default: "american-style",
-    enum: [
-      "american-style",
-      "european-style",
-      "modern-style"
-    ]
   },
 
   // 🖼️ PROFILE IMAGE
@@ -197,6 +192,13 @@ const cvSchema = new mongoose.Schema({
     }
   ]
 }, { timestamps: true });
+
+cvSchema.index({
+  name: 'text',
+  label: 'text',
+  email: 'text',
+});
+
 
 const Cv = mongoose.model("Cv", cvSchema);
 

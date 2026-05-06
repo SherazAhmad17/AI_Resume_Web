@@ -3,6 +3,8 @@ import Cv from '../model/cvModle.js'
 import CustomError from '../handler/CustomError.js'
 import User from '../model/user.model.js';
 import uploadToCloudinary from '../utils/uploadToCloudinary.js';
+import deleteFromCloudinary from '../utils/deleteFromCloudinary.js';
+import { ApiFeatures } from '../utils/apiFeatures.js';
 
 
 const CreateCv = AsyncHandler(async (req, res, next) => {
@@ -105,20 +107,30 @@ const getAllCvs = AsyncHandler(async (req, res, next) => {
 
     const userId = req.userId;
 
-    const cvs = await Cv.find({ userId })
+    // Only these fields can be used for filtering via query params
+    const allowedFields = [
+        "name",
+        "email",
+        "templateId",
+        "label"
+    ];
 
-    console.log(cvs);
+    const baseQuery = Cv.find({ userId });
 
+    const features = new ApiFeatures(baseQuery, req.query, allowedFields)
+        .filter()
+        .search()
+        .paginate();
 
-    if (cvs.length === 0) {
-        throw new CustomError(404, 'CVs not found')
-    }
+    const cvs = await features.query;
 
+    // Return empty array instead of 404 — user simply has no CVs yet
     res.status(200).json({
         success: true,
-        message: 'CVs fetched successfully',
-        data: cvs
-    })
+        message: cvs.length === 0 ? 'No CVs found' : 'CVs fetched successfully',
+        data: cvs,
+        result: cvs.length
+    });
 
 })
 

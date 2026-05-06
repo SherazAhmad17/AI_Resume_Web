@@ -1,5 +1,5 @@
-function ErrorMiddleWare(err,req,res,next){
-    if(res.headersSent){
+function ErrorMiddleWare(err, req, res, next) {
+    if (res.headersSent) {
         return next(err);
     }
 
@@ -8,8 +8,8 @@ function ErrorMiddleWare(err,req,res,next){
 
     res.status(statusCode).json({
         success: false,
-        message:message,
-        stack : err.stack
+        message: message,
+        stack: err.stack
     })
 
 }
